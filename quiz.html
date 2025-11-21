@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mini-quiz anti-phishing</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+      color: #111827;
+    }
+    .container {
+      max-width: 720px;
+      margin: 32px auto;
+      background: #fff;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0 0 8px;
+      text-align: center;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #4b5563;
+      margin-bottom: 18px;
+    }
+    .progress {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 10px 0 18px;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #2563eb;
+      transition: width 0.25s;
+    }
+    .card {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 14px;
+      background: #fafafa;
+    }
+    .q-title {
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .q-context {
+      font-size: 14px;
+      color: #374151;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+      background: #fff;
+      border: 1px dashed #e5e7eb;
+      padding: 10px;
+      border-radius: 6px;
+    }
+    .options {
+      display: grid;
+      gap: 8px;
+    }
+    .option {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .option:hover {
+      border-color: #93c5fd;
+      background: #eff6ff;
+    }
+    .option input {
+      margin-top: 2px;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    button {
+      border: none;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    .btn-disabled {
+      background: #cbd5e1;
+      cursor: not-allowed;
+    }
+    .feedback {
+      margin-top: 10px;
+      font-size: 14px;
+      padding: 10px;
+      border-radius: 6px;
+      display: none;
+    }
+    .feedback.ok {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+    }
+    .feedback.ko {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+    .score-box {
+      display: none;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fff;
+      margin-top: 8px;
+    }
+    .score-title {
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .tips {
+      font-size: 14px;
+      color: #374151;
+      line-height: 1.5;
+    }
+    .pill {
+      display: inline-block;
+      font-size: 12px;
+      background: #eef2ff;
+      color: #3730a3;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mini-quiz anti-phishing</h1>
+    <div class="subtitle">Teste tes réflexes face aux signaux classiques.</div>
+
+    <div class="progress" aria-label="progression">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="quiz"></div>
+
+    <div class="actions">
+      <button id="prevBtn" class="btn-secondary">Question précédente</button>
+      <button id="nextBtn" class="btn-primary btn-disabled">Valider</button>
+    </div>
+
+    <div class="score-box" id="scoreBox">
+      <div class="score-title" id="scoreTitle"></div>
+      <div class="tips" id="scoreTips"></div>
+      <div class="actions" style="margin-top:12px;">
+        <button id="restartBtn" class="btn-primary">Recommencer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+      {
+        title: "Identifier le signal principal",
+        context:
+`Objet: Action requise avant 18h
+De: Direction Scolarité <admin@ecole-support.edu>
+
+Bonjour,
+suite à une mise à jour, confirmez votre accès via le bouton ci-dessous.`,
+        options: [
+          "Le ton est poli, ça semble normal",
+          "Le domaine expéditeur est différent du domaine officiel",
+          "Le message est court, donc fiable",
+          "La mention d’une mise à jour garantit l’authenticité"
+        ],
+        correctIndex: 1,
+        explanation:
+"Le domaine ressemble au vrai mais diffère. C’est un signal fort de phishing."
+      },
+      {
+        title: "Quelle action est la plus sûre",
+        context:
+`Vous recevez un email qui demande une réauthentification immédiate via un lien externe.`,
+        options: [
+          "Cliquer et se connecter pour éviter la coupure",
+          "Répondre avec vos identifiants pour aller plus vite",
+          "Ouvrir le portail officiel via vos favoris et vérifier",
+          "Transférer à un collègue pour avis"
+        ],
+        correctIndex: 2,
+        explanation:
+"On ne suit pas un lien reçu. On passe par un accès officiel connu."
+      },
+      {
+        title: "Urgence et pression",
+        context:
+`Un message indique: "Dernier rappel. Sans action dans l’heure, votre compte sera suspendu."`,
+        options: [
+          "L’urgence est un levier classique de manipulation",
+          "C’est une procédure IT standard",
+          "Cela prouve que l’émetteur est sérieux",
+          "Les vrais emails sont toujours pressants"
+        ],
+        correctIndex: 0,
+        explanation:
+"L’urgence forte sans contexte vérifiable est un drapeau rouge."
+      },
+      {
+        title: "Pièce jointe inattendue",
+        context:
+`Vous recevez un fichier "facture_2025.zip" d’un fournisseur avec qui vous n’avez pas d’échange en cours.`,
+        options: [
+          "Ouvrir la pièce jointe pour vérifier",
+          "Demander au support IT avant ouverture",
+          "Activer les macros si demandé",
+          "L’archivage zip est un bon signe"
+        ],
+        correctIndex: 1,
+        explanation:
+"Une pièce jointe inattendue doit être vérifiée hors-bande."
+      },
+      {
+        title: "Adresse affichée vs adresse réelle",
+        context:
+`Nom affiché: "Support informatique"
+Adresse: support-it@ecole.edu.secure-help.com`,
+        options: [
+          "Le nom affiché suffit",
+          "L’adresse réelle montre un domaine tiers",
+          "Les sous-domaines très longs sont toujours officiels",
+          "Le TLS protège contre le phishing"
+        ],
+        correctIndex: 1,
+        explanation:
+"Le domaine final est différent. Le nom affiché peut être trompeur."
+      },
+      {
+        title: "Demande d’information sensible par mail",
+        context:
+`Email interne: "Peux-tu me renvoyer ton code MFA pour valider l’accès ?"`,
+        options: [
+          "C’est normal entre collègues",
+          "Le MFA peut être partagé en interne",
+          "Aucun canal email ne doit servir à partager MFA ou mots de passe",
+          "Répondre vite pour aider"
+        ],
+        correctIndex: 2,
+        explanation:
+"Un code MFA ou un mot de passe ne se partage jamais."
+      }
+    ];
+
+    let state = {
+      index: 0,
+      answers: Array(QUESTIONS.length).fill(null),
+      validated: Array(QUESTIONS.length).fill(false),
+      score: 0
+    };
+
+    const quizEl = document.getElementById("quiz");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const progressBar = document.getElementById("progressBar");
+    const scoreBox = document.getElementById("scoreBox");
+    const scoreTitle = document.getElementById("scoreTitle");
+    const scoreTips = document.getElementById("scoreTips");
+    const restartBtn = document.getElementById("restartBtn");
+
+    function render() {
+      const q = QUESTIONS[state.index];
+      const answered = state.answers[state.index] !== null;
+      const validated = state.validated[state.index];
+
+      progressBar.style.width = `${(state.index / QUESTIONS.length) * 100}%`;
+
+      quizEl.innerHTML = `
+        <div class="card">
+          <div class="q-title">${state.index + 1}. ${q.title}</div>
+          <div class="q-context">${escapeHtml(q.context)}</div>
+          <div class="options">
+            ${q.options.map((opt, i) => `
+              <label class="option">
+                <input type="radio" name="opt" value="${i}" ${state.answers[state.index] === i ? "checked" : ""} ${validated ? "disabled" : ""}/>
+                <span>${escapeHtml(opt)}</span>
+              </label>
+            `).join("")}
+          </div>
+          <div class="feedback ${validated && state.answers[state.index] === q.correctIndex ? "ok" : "ko"}" id="feedback">
+            ${validated ? (state.answers[state.index] === q.correctIndex ? "Bonne réponse. " : "Mauvaise réponse. ") + escapeHtml(q.explanation) : ""}
+          </div>
+        </div>
+      `;
+
+      const feedbackEl = document.getElementById("feedback");
+      if (validated) feedbackEl.style.display = "block";
+
+      prevBtn.disabled = state.index === 0;
+      prevBtn.className = state.index === 0 ? "btn-secondary btn-disabled" : "btn-secondary";
+
+      if (!validated) {
+        nextBtn.textContent = "Valider";
+        nextBtn.disabled = !answered;
+        nextBtn.className = answered ? "btn-primary" : "btn-primary btn-disabled";
+      } else {
+        nextBtn.textContent = state.index === QUESTIONS.length - 1 ? "Voir le score" : "Question suivante";
+        nextBtn.disabled = false;
+        nextBtn.className = "btn-primary";
+      }
+    }
+
+    function validateCurrent() {
+      if (state.validated[state.index]) return;
+
+      const q = QUESTIONS[state.index];
+      const a = state.answers[state.index];
+      state.validated[state.index] = true;
+      if (a === q.correctIndex) state.score += 1;
+
+      render();
+      progressBar.style.width = `${((state.index + 1) / QUESTIONS.length) * 100}%`;
+    }
+
+    function next() {
+      if (!state.validated[state.index]) {
+        validateCurrent();
+        return;
+      }
+      if (state.index < QUESTIONS.length - 1) {
+        state.index += 1;
+        render();
+      } else {
+        showScore();
+      }
+    }
+
+    function prev() {
+      if (state.index > 0) {
+        state.index -= 1;
+        render();
+      }
+    }
+
+    function showScore() {
+      quizEl.innerHTML = "";
+      scoreBox.style.display = "block";
+      const total = QUESTIONS.length;
+      scoreTitle.textContent = `Score final: ${state.score} / ${total}`;
+
+      let tips = [];
+      if (state.score <= 2) {
+        tips.push("Revois les signaux de base: urgence, domaine imité, demande d’identifiants.");
+        tips.push("Réflexe clé: passer par les canaux officiels, jamais via un lien reçu.");
+      } else if (state.score <= 4) {
+        tips.push("Bon niveau. Renforce le contrôle des domaines et des pièces jointes.");
+        tips.push("Pense à signaler les emails suspects au support.");
+      } else {
+        tips.push("Très bon niveau. Tu détectes les signaux classiques.");
+        tips.push("Continue à appliquer les vérifications hors-bande.");
+      }
+
+      scoreTips.innerHTML = tips.map(t => `<div><span class="pill">Conseil</span>${escapeHtml(t)}</div>`).join("");
+      progressBar.style.width = "100%";
+    }
+
+    function restart() {
+      state = {
+        index: 0,
+        answers: Array(QUESTIONS.length).fill(null),
+        validated: Array(QUESTIONS.length).fill(false),
+        score: 0
+      };
+      scoreBox.style.display = "none";
+      render();
+    }
+
+    quizEl.addEventListener("change", (e) => {
+      if (e.target && e.target.name === "opt") {
+        state.answers[state.index] = Number(e.target.value);
+        render();
+      }
+    });
+
+    prevBtn.addEventListener("click", prev);
+    nextBtn.addEventListener("click", next);
+    restartBtn.addEventListener("click", restart);
+
+    function escapeHtml(str) {
+      return str
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
+    render();
+  </script>
+</body>
+</html>
