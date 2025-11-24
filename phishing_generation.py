@@ -107,7 +107,7 @@ print(json.dumps(pretext, indent=2, ensure_ascii=False))
 
 print("\n[PHISHING] Exemple email (Variante 1):")
 email_body = generator.generate_email_body(pretext, profile, "technical")
-print(email_body[:500] + "...")
+print(email_body[:1000] + "...")
 
 print("\n[NOTICE] Cet email est pour ANALYSE PÉDAGOGIQUE uniquement.")
 print("[NOTICE] Ne jamais envoyer à cibles réelles.")
