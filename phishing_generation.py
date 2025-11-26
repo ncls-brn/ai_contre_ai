@@ -98,7 +98,7 @@ Incluez où serait le payload (URL malveillante, formulaire)
 
 # Utilisation
 generator = PhishingEmailGenerator()
-osint= OSINTGatherer(target_email="doedoejohn110@gmail.com")
+osint= OSINTGatherer(target_email="doejohn110@gmail.com")
 profile = osint.build_profile()
 pretext = generator.generate_pretext(profile)
 
