@@ -1,0 +1,27 @@
+# Core dependencies
+gradio>=4.0.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualization
+matplotlib>=3.7.0
+mplfinance>=0.12.10b0
+
+# Financial data
+yfinance>=0.2.28
+
+# Security
+cryptography>=41.0.0
+
+# Optional: Better performance
+# httpx>=0.24.0
+# aiohttp>=3.8.0
+
+# Authentication
+PyJWT>=2.8.0
+pyotp>=2.9.0
+qrcode[pil]>=7.4.2
