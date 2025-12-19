@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Rectangle
 import os
+import pandas as pd
 
 print("=" * 80)
 print("EXERCICE 3: ANALYSE & STRATÉGIE DE DÉFENSE")
