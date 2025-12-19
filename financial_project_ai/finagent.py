@@ -15,6 +15,8 @@ import re
 from mplfinance.original_flavor import candlestick_ohlc
 import matplotlib.dates as mpdates
 
+'''test'''
+
 class TickerExtractor:
     def __init__(self, api_key):
         self.client = OpenAI(api_key=api_key)
