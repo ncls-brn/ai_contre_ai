@@ -50,7 +50,7 @@ class TickerExtractor:
         
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-mini",  # ← CORRIGÉ : gpt-5 n'existe pas
                 messages=[
                     {"role": "system", "content": "You are a financial expert. Extract or suggest stock tickers from text."},
                     {"role": "user", "content": prompt}
@@ -73,8 +73,9 @@ class TickerExtractor:
             return None
 
 class FinancialAgent:
-    def __init__(self, api_key):
+    def __init__(self, api_key, model="gpt-4o-mini"):  # ← Paramètre configurable
         self.client = OpenAI(api_key=api_key)
+        self.model = model  # ← Stocke le modèle
         self.ticker_extractor = TickerExtractor(api_key)
         self.context = """You are a sophisticated financial expert assistant. Analyze the provided metrics and generate insights about:
         1. Current market position based on technical indicators
@@ -251,7 +252,7 @@ Risk Metrics:
         ]
         
         response = self.client.chat.completions.create(
-            model="gpt-4",
+            model=self.model,  # ← CORRIGÉ : utilise self.model
             messages=messages,
             max_tokens=2000
         )
@@ -378,16 +379,18 @@ def process_request(message, ticker_input, period_input, history):
     if history is None:
         history = []
     
-    history.append([message, None])
-    
+    # Add user message to history
+    history.append({"role": "user", "content": message})
+
     try:
         # Load API key
         with open('auth.yaml', 'r') as f:
             config = yaml.safe_load(f)
         apikey = config['openai']['access_key']
     except Exception as e:
-        history[-1][1] = f"Error loading API key: {str(e)}"
-        return history, None, None, None  # Return all expected outputs
+        response = f"Error loading API key: {str(e)}"
+        history.append({"role": "assistant", "content": response})
+        return history, None, None, None
     
     # Initialize OpenAI client
     client = OpenAI(api_key=apikey)
@@ -402,10 +405,12 @@ def process_request(message, ticker_input, period_input, history):
                 selected_ticker = ticker_input.strip().upper()
                 print(f"Using provided ticker: {selected_ticker}")
             else:
-                history[-1][1] = f"Error: Invalid ticker symbol {ticker_input}"
+                response = f"Error: Invalid ticker symbol {ticker_input}"
+                history.append({"role": "assistant", "content": response})
                 return history, None, None, None
         except Exception as e:
-            history[-1][1] = f"Error validating ticker {ticker_input}: {str(e)}"
+            response = f"Error validating ticker {ticker_input}: {str(e)}"
+            history.append({"role": "assistant", "content": response})
             return history, None, None, None
     
     # Step 2: If no ticker provided, look for explicit ticker mentions in message
@@ -447,12 +452,13 @@ def process_request(message, ticker_input, period_input, history):
         response = "I couldn't identify a specific stock ticker. Please either:\n" \
                   "1. Use the ticker input field (e.g., AAPL), or\n" \
                   "2. Mention the company name or ticker in your message (e.g., 'Analyze Tesla' or 'Check $TSLA')"
-        history[-1][1] = response
+        history.append({"role": "assistant", "content": response})
         return history, None, None, None
     
     # Process the request with the identified ticker
     try:
-        agent = FinancialAgent(api_key=apikey)
+        # ← CORRIGÉ : utilise gpt-4o-mini par défaut
+        agent = FinancialAgent(api_key=apikey, model="gpt-4o-mini")
         df = agent.get_stock_data(selected_ticker, period_input)
         
         if isinstance(df, pd.DataFrame):
@@ -471,21 +477,23 @@ def process_request(message, ticker_input, period_input, history):
                 include_analysis=True
             )
             
-            history[-1][1] = f"Using ticker: {selected_ticker}\n\n{response}"
+            response = f"Using ticker: {selected_ticker}\n\n{response}"
+            history.append({"role": "assistant", "content": response})
             return history, stock_plot, technical_plot, volume_analysis_plot
             
         else:
-            error_msg = f"Error: Unable to fetch data for {selected_ticker}"
-            history[-1][1] = error_msg
+            response = f"Error: Unable to fetch data for {selected_ticker}"
+            history.append({"role": "assistant", "content": response})
             return history, None, None, None
             
     except Exception as e:
-        error_msg = f"An error occurred: {str(e)}"
-        history[-1][1] = error_msg
+        response = f"An error occurred: {str(e)}"
+        history.append({"role": "assistant", "content": response})
         return history, None, None, None
 
 # Main Gradio interface setup
-demo = gr.Blocks(theme=gr.themes.Base())
+demo = gr.Blocks()
+
 with demo:
     gr.Markdown("# Advanced Financial Analysis Assistant")
     
