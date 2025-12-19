@@ -409,31 +409,6 @@ def clear_outputs():
     return [], None, None, None
 
 
-def secure_process_request_with_auth(message, ticker_input, period_input, history):
-    """Process request with authentication check"""
-    
-    # 1. Vérifier l'authentification
-    is_valid, username = check_session()
-    
-    if not is_valid:
-        error_msg = "🔒 Authentication required. Please log in to use this service."
-        return history + [
-            {"role": "user", "content": message[:100] if message else ""},
-            {"role": "assistant", "content": error_msg}
-        ], None, None, None
-    
-    # 2. Logger l'activité de l'utilisateur
-    logger.info(f"Request from authenticated user: {username}")
-    
-    # 3. Appeler la fonction d'origine
-    return secure_process_request(message, ticker_input, period_input, history)
-
-
-# Créer une interface combinée
-# main.py - Partie à remplacer (vers la fin du fichier)
-
-# ... (tout le code précédent reste identique jusqu'à la fonction secure_process_request) ...
-
 def secure_process_request(message, ticker_input, period_input, history):
     """Process request with security filters"""
     
@@ -674,7 +649,6 @@ def cleanup_cache():
         logger.error(f"Error cleaning cache: {e}")
 
 
-# Créer une interface combinée
 def create_complete_interface():
     """Créer l'interface complète avec authentification"""
     
@@ -774,45 +748,6 @@ def create_complete_interface():
 
 # Point d'entrée principal
 if __name__ == "__main__":
-    print("=" * 60)
-    print("🔐 Secure Financial Analysis Assistant")
-    print("=" * 60)
-    
-    try:
-        # Nettoyer le cache au démarrage
-        cleanup_cache()
-        
-        # Nettoyer les sessions expirées
-        from auth_interface import auth_manager
-        auth_manager.session_manager.cleanup_expired_sessions()
-        
-        # Test de l'API
-        test_mistral_api()
-        
-        # Charger et valider la clé API
-        apikey = load_api_key()
-        print(f"\n✅ API Key validated: {apikey[:10]}...")
-        print("✅ Security filters enabled")
-        print("✅ Encrypted cache enabled (24h retention)")
-        print("✅ Data integrity verification enabled")
-        print("✅ PII detection and filtering enabled")
-        print("✅ GDPR compliance measures active")
-        print("✅ Multi-Factor Authentication enabled")
-        print("✅ JWT session management enabled")
-        print("✅ Password policy enforcement enabled")
-        
-        print("\n🚀 Starting application...")
-        
-        # Lancer l'interface complète
-        app = create_complete_interface()
-        app.launch()
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        print("\n📝 Create a .env file with:")
-        print("   MISTRAL_API_KEY=your_key_here")
-        print("   JWT_SECRET=your_secret_here")
-        exit(1)
     print("=" * 60)
     print("🔐 Secure Financial Analysis Assistant")
     print("=" * 60)
