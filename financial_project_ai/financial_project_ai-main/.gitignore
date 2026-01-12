@@ -1,0 +1,7 @@
+.env
+*pentest_reports/
+__pycache__/
+.auth/
+.cache/
+.sessions/
+*pentest.log
